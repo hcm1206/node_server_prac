@@ -24,6 +24,7 @@
     "express": "^5.2.1",
     "express-session": "^1.19.0",
     "morgan": "^1.11.0",
+    "redis": "^3.1.2",
     "request": "^2.88.2"
   },
   "devDependencies": {
