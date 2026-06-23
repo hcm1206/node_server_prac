@@ -1,19 +1,16 @@
-// 간단한 게시판 API 서버 만들기
+// 게시판에 uuid-apikey 추가하기
 
-// dotenv 사용 위한 모둘 로드
-const path = require('path');
-const dotenv = require('dotenv');
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
-
-// 로그 출력 모듈 로드
+// 모듈 로드
 const morgan = require('morgan');
+const url = require('url');
+const uuidAPIkey = require('uuid-apikey');
 
 /* express app generate */
 // express 모듈 로드 및 express 앱 생성
 const express = require('express');
 const app = express();
 
-/* 포트 실행 */
+/* 포트 설정 */
 app.set('port', process.env.PORT || 8080);
 
 /* 공통 미들웨어 */
@@ -21,8 +18,15 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+/* 테스트를 위한 API키 */
+// uuid_apikey.js에서 생성한 apikey와 uuid 사용
+const key = {
+    apiKey: 'YPBAMSG-SPM4KQ0-QEWSHX2-0FKPXBT',
+    uuid: 'f596aa66-cda8-49dc-bbb9-98f403e76eaf'
+};
+
 /* 테스트를 위한 게시글 데이터 */
-// 일반적으로 데이터베이스를 사용해야 하나, 테스트용으로 전역변수 사용
+// DB 대신 전역변수 사용
 let boardList = [];
 let numOfBoard = 0;
 
@@ -38,7 +42,7 @@ app.get('/board', (req, res) => {
     res.send(boardList);
 });
 
-// /board 주소 POST 요청 시 새 게시글 생성 및 추가
+// /board 주소 POST 요청 시 현재 게시글 데이터를 응답으로 전송
 app.post('/board', (req, res) => {
     // 게시글 객체 생성
     const board = {
@@ -58,13 +62,13 @@ app.post('/board', (req, res) => {
 
     // /board URL로 리다이렉트(/board GET 요청 수행)
     res.redirect('/board');
-})
+});
 
 // /board/{id} 주소 PUT 요청 시 {id}에 해당하는 게시글 수정
 app.put('/board/:id', (req, res) => {
     // req.params.id 값 찾아 리스트에서 삭제
     const findItem = boardList.find((item) => {
-        return item.id == +req.params.id;
+        return item.id == +req.params.id
     });
     // 삭제할 id에 해당하는 게시글 인덱스 찾아서 게시글 리스트에서 삭제
     const idx = boardList.indexOf(findItem);
@@ -87,11 +91,11 @@ app.put('/board/:id', (req, res) => {
     boardList.push(board);
 
     // /board URL로 리다이렉트(/board GET 요청 수행)
-    req.redirect('/board');
+    res.redirect('/board');
 });
 
 // /board/{id} 주소 DELETE 요청 시 {id}에 해당하는 게시글 삭제
-app.delete('/board/:id', (req, res) => {
+app.delete('/board:id', (req, res) => {
     // req.params.id 값 찾아 리스트에서 삭제
     const findItem = boardList.find((item) => {
         return item.id == +req.params.id
@@ -104,14 +108,47 @@ app.delete('/board/:id', (req, res) => {
     res.redirect('/board');
 });
 
+/* 게시글 검색 API using uuid-key */
+// /board/{apikey}/{type} GET 요청 시 파라미터에 따른 작업 수행
+app.get('/board/:apikey/:type', (req, res) => {
+    // URL 파라미터로 받아온 값 변수로 저장
+    let {type, apikey} = req.params;
+    // 요청 주소 뒤에 ?key=value 형식 url 쿼리스트링 받을 시 해당 쿼리스트링을 파싱하여 변수로 저장
+    const queryData = url.parse(req.url, true).query;
+
+    // 파라미터로 받아온 apikey가 uuidAPIkey에 존재하고(발급한 키이고) uuid와 짝이 맞을 시
+    if (uuidAPIkey.isAPIKey(apikey) && uuidAPIkey.check(apikey, key.uuid)) {
+        // 파라미터 type이 'search'이면
+        if (type == 'search') { // 키워드로 게시글 탐색
+            // 파싱된 쿼리스트링에서 키워드와 게시글을 추출하여 키워드가 제목에 포함된 게시물을 응답 결과로 전송
+            const keyword = queryData.keyword;
+            const result = boardList.filter((e) => {
+                return e.title.includes(keyword)
+            })
+            res.send(result);
+        }
+        // 파라미터 type이 'user'이면
+        else if (type == 'user') {  // 닉네임으로 게시글 검색
+            // 파싱된 쿼리스트링에서 유저 아이디와 게시글을 추출하여 유저 아이디와 같은 게시물을 응답 결과로 전송
+            const user_id = queryData.user_id;
+            const result = boardList.filter((e) => {
+                return e.user_id === user_id;
+            });
+            res.send(result);
+        }
+        // 받은 파라미터가 정의되지 않은 값이면 Wrong URL 문자열을 응답으로 전송
+        else {
+            res.send('Wrong URL');
+        }
+    }
+    // 받아온 파라미터 apikey값이 발급된 적 없는 키이거나 uuid와 매칭되지 않을 시 Wrong API Key 문자열을 응답으로 전송
+    else {
+        res.send('Wrong API Key');
+    }
+});
+
+/* 서버와 포트 연결 ..*/
 // 지정한 포트에서 클라이언트 연결 및 로그 출력
 app.listen(app.get('port'), () => {
     console.log(app.get('port'), '번 포트에서 서버 실행 중 ..');
 })
-
-
-/* 
-이걸 테스트하려면 curl 명령어를 사용하거나 Postman 같은 API 테스트 자동화 도구를 이용해야 함
-테스트는 귀찮으니 나중에
-ㅈ버그 터져도 난 모름
-*/
