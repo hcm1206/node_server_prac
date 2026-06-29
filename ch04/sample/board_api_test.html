@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Board API TEST</title>
+    </head>
+    <body>
+        <div id="result"></div>
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+        <script>
+            // 8080 포트에서 실행되는 서버의 /board GET요청 URL
+            const reqURL = "http://localhost:8080/board/";
+            // uuid_apikey에서 발급된 API Key
+            const apiKey = encodeURI("PB5ZG27-AWG4QT6-MDWGCQW-3KX8A1K/");
+            // URL 파라미터 값(keyword를 정상화로 지정)
+            const params = "search?keyword=정상화";
+            // 최종 URL 값 설정
+            const url = reqURL + apiKey + params;
+            // axios 요청을 통해 URL 값으로 접속하여 결과값을 JSON 형식으로 받아와 출력
+            axios
+                .get(url)
+                .then((result) => {
+                    document.querySelector("#result").textContent = JSON.stringify(
+                        result.data
+                    );
+                })
+                .catch((err) => {
+                    console.error(err);
+                });
+        </script>
+    </body>
+</html>

@@ -1,0 +1,2 @@
+curl -d "{\"user_id\":\"신창섭\", \"title\":\"바로 리부트 정상화\", \"content\":\"오늘도 메벤을 눈팅하는 신창섭\"}" -H "Content-type: application/json" -X POST http://localhost:8080/board
+curl -d "{\"user_id\":\"happy\", \"title\":\"안녕하세요\", \"content\":\"API 서버 공부중입니다\"}" -H "Content-Type: application/json" -X POST http://localhost:8080/board

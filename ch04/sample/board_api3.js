@@ -1,12 +1,12 @@
-// 게시판에 uuid-apikey 추가하기
+// cors 모듈 설치
 
 // 모듈 로드
 const morgan = require('morgan');
 const url = require('url');
 const uuidAPIkey = require('uuid-apikey');
+const cors = require('cors');   // cors 임포트
 
 /* express app generate */
-// express 모듈 로드 및 express 앱 생성
 const express = require('express');
 const app = express();
 
@@ -16,7 +16,8 @@ app.set('port', process.env.PORT || 8080);
 /* 공통 미들웨어 */
 app.use(morgan('dev'));
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({extended: true}));
+app.use(cors());    // 모든 라우터에 cors 적용
 
 /* 테스트를 위한 API키 */
 // uuid_apikey.js에서 생성한 apikey와 uuid 사용
@@ -152,3 +153,8 @@ app.get('/board/:apikey/:type', (req, res) => {
 app.listen(app.get('port'), () => {
     console.log(app.get('port'), '번 포트에서 서버 실행 중 ..');
 })
+
+/*
+npm의 cor 모듈을 이용하여 cors를 모든 라우터가 지나갈 수 있게 등록하면 CORS 오류는 발생하지 않음
+cors가 특정 라우터에만 지나가도록 적용하는 것도 가능
+*/
